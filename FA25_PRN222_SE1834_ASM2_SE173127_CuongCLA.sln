@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36518.9 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zEVRental.Repositories.CuongCLA", "zEVRental.Repositories.CuongCLA\zEVRental.Repositories.CuongCLA.csproj", "{27CDF345-649A-97BC-66CF-751F7020AE75}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zEVRental.Services.CuongCLA", "zEVRental.Services.CuongCLA\zEVRental.Services.CuongCLA.csproj", "{298709CC-C609-FF59-542D-BCBD43CA592B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "zPayment.BlazorWebApp.CuongCLA", "zPayment.BlazorWebApp.CuongCLA\zPayment.BlazorWebApp.CuongCLA.csproj", "{B3D4B26C-BFBB-4E6D-A0DD-668DD92F82CF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{27CDF345-649A-97BC-66CF-751F7020AE75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27CDF345-649A-97BC-66CF-751F7020AE75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27CDF345-649A-97BC-66CF-751F7020AE75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27CDF345-649A-97BC-66CF-751F7020AE75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{298709CC-C609-FF59-542D-BCBD43CA592B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{298709CC-C609-FF59-542D-BCBD43CA592B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{298709CC-C609-FF59-542D-BCBD43CA592B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{298709CC-C609-FF59-542D-BCBD43CA592B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3D4B26C-BFBB-4E6D-A0DD-668DD92F82CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3D4B26C-BFBB-4E6D-A0DD-668DD92F82CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3D4B26C-BFBB-4E6D-A0DD-668DD92F82CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3D4B26C-BFBB-4E6D-A0DD-668DD92F82CF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B4C59C2D-C7DC-4721-AA98-467233C070C6}
+	EndGlobalSection
+EndGlobal
