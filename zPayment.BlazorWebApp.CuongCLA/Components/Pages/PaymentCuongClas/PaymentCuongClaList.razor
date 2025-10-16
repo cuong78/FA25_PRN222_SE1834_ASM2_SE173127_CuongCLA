@@ -1,6 +1,7 @@
 ﻿@page "/paymentcuongclas/PaymentCuongClaList"
 @using zEVRental.Repositories.CuongCLA.Models
 @inject zEVRental.Services.CuongCLA.IServiceProviders _serviceProviders;
+@inject NavigationManager Navigation
 <h3>PaymentCuongClaList</h3>
 
 @if (paymentCuongClaLists == null)
@@ -8,8 +9,10 @@
     <h2 class="text-danger fw-bold"> Page loading.....</h2>
 }
 
+
 else
 {
+    <a href="/PaymentCuongClas/PaymentCuongClaForm" class="btn btn-success"> Create</a>
     <table>
         <thead>
             <tr>
@@ -23,7 +26,7 @@ else
                 <th>DepositReturnAmount</th>
                 <th>Booking</th>
                 <th>ProcessedByNavigation</th>
-
+                <th>Actions</th>
             </tr>
         </thead>
 
@@ -41,10 +44,16 @@ else
                     <td>@item.DepositReturnAmount</td>
                     <td>@item.Booking.Customer.FullName / @item.Booking.BookingCuongClaid</td>
                     <td>@item.ProcessedByNavigation.Email</td>
-
+                    <td>
+                        <button class="btn btn-primary btn-sm" @onclick="() => EditPayment(item.PaymentCuongClaid)">
+                            Edit
+                        </button>
+                        <button class="btn btn-primary btn-sm" @onclick="() => ViewPayment(item.PaymentCuongClaid)">
+                            View Detail
+                        </button>
+                    </td>
                 </tr>
-            }
-    )
+            }        
         </tbody>
     </table>
 }
@@ -64,4 +73,13 @@ else
 
     }
 
+    private void EditPayment(int paymentId)
+    {
+        Navigation.NavigateTo($"/PaymentCuongClas/PaymentCuongClaForm/{paymentId}");
+    }
+
+    private void ViewPayment(int paymentId)
+    {
+        Navigation.NavigateTo($"/PaymentCuongClas/PaymentCuongClaDetail/{paymentId}");
+    }
 }

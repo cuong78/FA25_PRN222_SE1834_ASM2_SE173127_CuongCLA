@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("zEVRental.Repositories.CuongCLA")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+15c201b10e4ef016d72d820c3006d7d4f8305251")]
 [assembly: System.Reflection.AssemblyProductAttribute("zEVRental.Repositories.CuongCLA")]
 [assembly: System.Reflection.AssemblyTitleAttribute("zEVRental.Repositories.CuongCLA")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

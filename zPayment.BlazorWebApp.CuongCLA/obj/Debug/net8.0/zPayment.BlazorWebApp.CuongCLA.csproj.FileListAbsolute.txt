@@ -74,3 +74,4 @@ D:\PRN222\FA25_PRN222_SE1834_ASM2_SE173127_CuongCLA\zPayment.BlazorWebApp.CuongC
 D:\PRN222\FA25_PRN222_SE1834_ASM2_SE173127_CuongCLA\zPayment.BlazorWebApp.CuongCLA\bin\Debug\net8.0\zEVRental.Services.CuongCLA.pdb
 D:\PRN222\FA25_PRN222_SE1834_ASM2_SE173127_CuongCLA\zPayment.BlazorWebApp.CuongCLA\bin\Debug\net8.0\zEVRental.Repositories.CuongCLA.pdb
 D:\PRN222\FA25_PRN222_SE1834_ASM2_SE173127_CuongCLA\zPayment.BlazorWebApp.CuongCLA\obj\Debug\net8.0\zPayment.5DE75FE8.Up2Date
+D:\PRN222\FA25_PRN222_SE1834_ASM2_SE173127_CuongCLA\zPayment.BlazorWebApp.CuongCLA\obj\Debug\net8.0\zPayment.BlazorWebApp.CuongCLA.sourcelink.json
