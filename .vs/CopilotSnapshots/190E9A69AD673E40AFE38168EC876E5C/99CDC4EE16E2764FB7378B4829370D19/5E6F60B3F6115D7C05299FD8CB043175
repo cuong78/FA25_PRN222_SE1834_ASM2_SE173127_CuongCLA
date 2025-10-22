@@ -1,6 +1,0 @@
-﻿@page "/PaymentCuongClas/PaymentCuongClaForm"
-<h3>PaymentCuongClaForm</h3>
-
-@code {
-
-}

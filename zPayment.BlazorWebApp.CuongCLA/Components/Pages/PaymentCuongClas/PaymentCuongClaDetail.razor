@@ -1,8 +1,425 @@
 ﻿@page "/PaymentCuongClas/PaymentCuongClaDetail/{PaymentCuongClaid:int?}"
+@using zEVRental.Repositories.CuongCLA.Models
+@inject zEVRental.Services.CuongCLA.IServiceProviders _serviceProviders
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
 
-<h3> @PaymentCuongClaid</h3>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>
+                    <i class="fas fa-file-invoice-dollar me-2"></i>
+                    Payment Details
+                </h2>
+                <div>
+                    <button class="btn btn-secondary me-2" @onclick="GoBack">
+                        <i class="fas fa-arrow-left me-2"></i>Back to List
+                    </button>
+                    @if (payment != null)
+                    {
+                        <button class="btn btn-primary me-2" @onclick="EditPayment" disabled="@IsProcessing">
+                            <i class="fas fa-edit me-2"></i>Edit
+                        </button>
+                        <button class="btn btn-danger" @onclick="DeletePayment" disabled="@IsProcessing">
+                            @if (IsProcessing)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            }
+                            else
+                            {
+                                <i class="fas fa-trash me-2"></i>
+                            }
+                            Delete
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (IsLoading)
+    {
+        <div class="text-center mt-5">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Loading payment details...</p>
+        </div>
+    }
+    else if (payment == null)
+    {
+        <div class="alert alert-warning" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Payment not found or has been deleted.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <!-- Payment Information Card -->
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-credit-card me-2"></i>
+                            Payment Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <td class="fw-bold text-muted" style="width: 40%;">Payment ID:</td>
+                                    <td>#@payment.PaymentCuongClaid</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-muted">Payment Date:</td>
+                                    <td>@payment.PaymentDate.ToString("MMMM dd, yyyy")</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-muted">Amount:</td>
+                                    <td class="fs-5 fw-bold text-success">
+                                        $@payment.Amount.ToString("N2")
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-muted">Payment Method:</td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-wallet me-1"></i>
+                                            @payment.PaymentMethod
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-muted">Payment Status:</td>
+                                    <td>
+                                        @{
+                                            var statusClass = payment.PaymentStatus switch
+                                            {
+                                                "Completed" => "bg-success",
+                                                "Pending" => "bg-warning",
+                                                "Failed" => "bg-danger",
+                                                "Cancelled" => "bg-secondary",
+                                                "Refunded" => "bg-info",
+                                                _ => "bg-secondary"
+                                            };
+                                        }
+                                        <span class="badge @statusClass">
+                                            @payment.PaymentStatus
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-muted">Is Deposit:</td>
+                                    <td>
+                                        @if (payment.IsDeposit)
+                                        {
+                                            <span class="badge bg-primary">
+                                                <i class="fas fa-check-circle me-1"></i>Yes
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-times-circle me-1"></i>No
+                                            </span>
+                                        }
+                                    </td>
+                                </tr>
+                                @if (payment.DepositReturnAmount.HasValue && payment.DepositReturnAmount.Value > 0)
+                                {
+                                    <tr>
+                                        <td class="fw-bold text-muted">Deposit Return Amount:</td>
+                                        <td class="fw-bold text-info">
+                                            $@payment.DepositReturnAmount.Value.ToString("N2")
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Information Card -->
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calendar-check me-2"></i>
+                            Booking Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @if (payment.Booking != null)
+                        {
+                            <table class="table table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <td class="fw-bold text-muted" style="width: 40%;">Booking ID:</td>
+                                        <td>#@payment.Booking.BookingCuongClaid</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold text-muted">Customer:</td>
+                                        <td>
+                                            <i class="fas fa-user me-1"></i>
+                                            @payment.Booking.Customer?.FullName
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold text-muted">Customer Phone:</td>
+                                        <td>
+                                            <i class="fas fa-phone me-1"></i>
+                                            @payment.Booking.Customer?.Phone
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold text-muted">Vehicle:</td>
+                                        <td>
+                                            <i class="fas fa-car me-1"></i>
+                                            @payment.Booking.Vehicle?.VehicleModel
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold text-muted">Booking Date:</td>
+                                        <td>@payment.Booking.BookingDate.ToString("MMM dd, yyyy")</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold text-muted">Booking Status:</td>
+                                        <td>
+                                            <span class="badge bg-secondary">
+                                                @payment.Booking.Status
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold text-muted">Total Cost:</td>
+                                        <td class="fw-bold text-primary">
+                                            $@payment.Booking.TotalCost.ToString("N2")
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold text-muted">Deposit Amount:</td>
+                                        <td class="fw-bold">
+                                            $@payment.Booking.DepositAmount.ToString("N2")
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No booking information available</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Information Card -->
+            <div class="col-12 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Additional Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <h6 class="fw-bold text-muted">Processed By:</h6>
+                                @if (payment.ProcessedByNavigation != null)
+                                {
+                                    <p class="mb-1">
+                                        <i class="fas fa-user-tie me-2"></i>
+                                        <strong>Name:</strong> @payment.ProcessedByNavigation.FullName
+                                    </p>
+                                    <p class="mb-1">
+                                        <i class="fas fa-envelope me-2"></i>
+                                        <strong>Email:</strong> @payment.ProcessedByNavigation.Email
+                                    </p>
+                                    <p class="mb-0">
+                                        <i class="fas fa-phone me-2"></i>
+                                        <strong>Phone:</strong> @payment.ProcessedByNavigation.Phone
+                                    </p>
+                                }
+                                else
+                                {
+                                    <p class="text-muted">Not assigned</p>
+                                }
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <h6 class="fw-bold text-muted">Notes:</h6>
+                                @if (!string.IsNullOrWhiteSpace(payment.Notes))
+                                {
+                                    <div class="alert alert-light border" role="alert">
+                                        <i class="fas fa-sticky-note me-2"></i>
+                                        @payment.Notes
+                                    </div>
+                                }
+                                else
+                                {
+                                    <p class="text-muted fst-italic">No notes available</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Timeline Card (if dates available) -->
+            @if (payment.Booking != null)
+            {
+                <div class="col-12 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-clock me-2"></i>
+                                Rental Timeline
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="text-center p-3 border rounded">
+                                        <i class="fas fa-calendar-plus fa-2x text-primary mb-2"></i>
+                                        <h6 class="fw-bold">Planned Pick-Up</h6>
+                                        <p class="mb-0">@payment.Booking.PlannedPickUpDate.ToString("MMM dd, yyyy")</p>
+                                        <small class="text-muted">@payment.Booking.PlannedPickUpDate.ToString("hh:mm tt")</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center p-3 border rounded">
+                                        <i class="fas fa-calendar-minus fa-2x text-warning mb-2"></i>
+                                        <h6 class="fw-bold">Planned Return</h6>
+                                        <p class="mb-0">@payment.Booking.PlannedReturnDate.ToString("MMM dd, yyyy")</p>
+                                        <small class="text-muted">@payment.Booking.PlannedReturnDate.ToString("hh:mm tt")</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center p-3 border rounded">
+                                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                        <h6 class="fw-bold">Actual Pick-Up</h6>
+                                        @if (payment.Booking.ActualPickUpDate.HasValue)
+                                        {
+                                            <p class="mb-0">@payment.Booking.ActualPickUpDate.Value.ToString("MMM dd, yyyy")</p>
+                                            <small class="text-muted">@payment.Booking.ActualPickUpDate.Value.ToString("hh:mm tt")</small>
+                                        }
+                                        else
+                                        {
+                                            <p class="text-muted fst-italic">Not yet picked up</p>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center p-3 border rounded">
+                                        <i class="fas fa-flag-checkered fa-2x text-info mb-2"></i>
+                                        <h6 class="fw-bold">Actual Return</h6>
+                                        @if (payment.Booking.ActualReturnDate.HasValue)
+                                        {
+                                            <p class="mb-0">@payment.Booking.ActualReturnDate.Value.ToString("MMM dd, yyyy")</p>
+                                            <small class="text-muted">@payment.Booking.ActualReturnDate.Value.ToString("hh:mm tt")</small>
+                                        }
+                                        else
+                                        {
+                                            <p class="text-muted fst-italic">Not yet returned</p>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
 
 @code {
     [Parameter]
-    public int PaymentCuongClaid { get; set; }
+    public int? PaymentCuongClaid { get; set; }
+
+    private PaymentCuongCla? payment;
+    private bool IsLoading = true;
+    private bool IsProcessing = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPaymentDetails();
+    }
+
+    private async Task LoadPaymentDetails()
+    {
+        IsLoading = true;
+        try
+        {
+            if (PaymentCuongClaid.HasValue && PaymentCuongClaid.Value > 0)
+            {
+                payment = await _serviceProviders._IpaymentCuongClaService.GetByIdAsync(PaymentCuongClaid.Value);
+                
+                if (payment == null)
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", "Payment not found!");
+                }
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Invalid Payment ID!");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error loading payment details: {ex.Message}");
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/paymentcuongclas/PaymentCuongClaList");
+    }
+
+    private void EditPayment()
+    {
+        if (PaymentCuongClaid.HasValue)
+        {
+            Navigation.NavigateTo($"/PaymentCuongClas/PaymentCuongClaForm/{PaymentCuongClaid.Value}");
+        }
+    }
+
+    private async Task DeletePayment()
+    {
+        if (PaymentCuongClaid.HasValue && await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete Payment #{PaymentCuongClaid.Value}? This action cannot be undone."))
+        {
+            IsProcessing = true;
+            try
+            {
+                var success = await _serviceProviders._IpaymentCuongClaService.DeleteAsync(PaymentCuongClaid.Value);
+                if (success)
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", "Payment deleted successfully!");
+                    Navigation.NavigateTo("/paymentcuongclas/PaymentCuongClaList");
+                }
+                else
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", "Failed to delete payment. Please try again.");
+                }
+            }
+            catch (Exception ex)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", $"Error deleting payment: {ex.Message}");
+            }
+            finally
+            {
+                IsProcessing = false;
+            }
+        }
+    }
 }

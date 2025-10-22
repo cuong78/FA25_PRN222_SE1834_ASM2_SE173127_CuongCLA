@@ -1,7 +1,19 @@
 ﻿@page "/"
+@inject NavigationManager Navigation
+@inject AuthenticationStateService AuthService
+@rendermode InteractiveServer
 
-<PageTitle>Home</PageTitle>
-
-<h1>Hello, world!</h1>
-
-Welcome to your new app.
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var isAuthenticated = await AuthService.IsAuthenticated();
+        if (isAuthenticated)
+        {
+            Navigation.NavigateTo("/paymentcuongclas/PaymentCuongClaList", forceLoad: true);
+        }
+        else
+        {
+            Navigation.NavigateTo("/login", forceLoad: true);
+        }
+    }
+}

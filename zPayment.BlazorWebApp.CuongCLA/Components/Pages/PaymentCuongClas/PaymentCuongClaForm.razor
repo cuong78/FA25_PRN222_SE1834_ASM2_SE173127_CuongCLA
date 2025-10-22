@@ -160,12 +160,6 @@
                                         <button type="button" class="btn btn-secondary" @onclick="Cancel">
                                             <i class="fas fa-times me-2"></i>Cancel
                                         </button>
-                                        @if (IsEditMode)
-                                        {
-                                            <button type="button" class="btn btn-danger" @onclick="DeletePayment" disabled="@IsProcessing">
-                                                <i class="fas fa-trash me-2"></i>Delete
-                                            </button>
-                                        }
                                     </div>
                                 </div>
                             </div>
@@ -316,35 +310,6 @@
         finally
         {
             IsProcessing = false;
-        }
-    }
-
-    private async Task DeletePayment()
-    {
-        if (Id.HasValue && await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this payment?"))
-        {
-            IsProcessing = true;
-            try
-            {
-                var success = await _serviceProviders._IpaymentCuongClaService.DeleteAsync(Id.Value);
-                if (success)
-                {
-                    await JSRuntime.InvokeVoidAsync("alert", "Payment deleted successfully!");
-                    Navigation.NavigateTo("/paymentcuongclas/PaymentCuongClaList");
-                }
-                else
-                {
-                    await JSRuntime.InvokeVoidAsync("alert", "Failed to delete payment.");
-                }
-            }
-            catch (Exception ex)
-            {
-                await JSRuntime.InvokeVoidAsync("alert", $"Error deleting payment: {ex.Message}");
-            }
-            finally
-            {
-                IsProcessing = false;
-            }
         }
     }
 

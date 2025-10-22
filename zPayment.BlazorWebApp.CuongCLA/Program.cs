@@ -1,5 +1,6 @@
 using zEVRental.Services.CuongCLA;
 using zPayment.BlazorWebApp.CuongCLA.Components;
+using zPayment.BlazorWebApp.CuongCLA.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +9,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddScoped<zEVRental.Services.CuongCLA.IServiceProviders, zEVRental.Services.CuongCLA.ServiceProviders>();
+builder.Services.AddScoped<AuthenticationStateService>();
 
 var app = builder.Build();
 

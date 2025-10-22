@@ -36,6 +36,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xIb21lLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/PRN222/FA25_PRN222_SE1834_ASM2_SE173127_CuongCLA/zPayment.BlazorWebApp.CuongCLA/Components/Pages/Login.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xMb2dpbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/PRN222/FA25_PRN222_SE1834_ASM2_SE173127_CuongCLA/zPayment.BlazorWebApp.CuongCLA/Components/Pages/PaymentCuongClas/PaymentCuongClaDetail.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xQYXltZW50Q3VvbmdDbGFzXFBheW1lbnRDdW9uZ0NsYURldGFpbC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 

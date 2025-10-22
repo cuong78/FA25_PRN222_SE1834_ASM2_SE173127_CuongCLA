@@ -2,75 +2,543 @@
 @using zEVRental.Repositories.CuongCLA.Models
 @inject zEVRental.Services.CuongCLA.IServiceProviders _serviceProviders;
 @inject NavigationManager Navigation
-<h3>PaymentCuongClaList</h3>
+@inject AuthenticationStateService AuthService
+@rendermode InteractiveServer
 
-@if (paymentCuongClaLists == null)
-{
-    <h2 class="text-danger fw-bold"> Page loading.....</h2>
-}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1">
+                                <i class="fas fa-money-check-alt text-primary me-2"></i>
+                                Payment Management
+                            </h2>
+                            <p class="text-muted mb-0">Manage and track all payment transactions</p>
+                            @if (currentUser != null)
+                            {
+                                <small class="text-success">
+                                    <i class="fas fa-user-circle me-1"></i>
+                                    Logged in as: <strong>@currentUser.FullName</strong> (@currentUser.Email)
+                                </small>
+                            }
+                        </div>
+                        <div>
+                            <button class="btn btn-success btn-lg shadow-sm me-2" @onclick="CreateNewPayment">
+                                <i class="fas fa-plus-circle me-2"></i>Create New Payment
+                            </button>
+                            <button class="btn btn-outline-danger" @onclick="Logout">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Search and Filter Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="fas fa-search me-2"></i>Search & Filter
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-user me-1"></i>Customer Name
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-user-circle"></i>
+                                </span>
+                                <input type="text" class="form-control" placeholder="Search by customer name..." 
+                                       @bind="searchCustomerName" @bind:event="oninput" />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-credit-card me-1"></i>Payment Method
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-wallet"></i>
+                                </span>
+                                <select class="form-select" @bind="searchPaymentMethod" @bind:after="ApplyFilters">
+                                    <option value="">All Payment Methods</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Credit Card">Credit Card</option>
+                                    <option value="Debit Card">Debit Card</option>
+                                    <option value="Bank Transfer">Bank Transfer</option>
+                                    <option value="Digital Wallet">Digital Wallet</option>
+                                    <option value="Check">Check</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-info-circle me-1"></i>Payment Status
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-check-circle"></i>
+                                </span>
+                                <select class="form-select" @bind="searchPaymentStatus" @bind:after="ApplyFilters">
+                                    <option value="">All Statuses</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Failed">Failed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                    <option value="Refunded">Refunded</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <button class="btn btn-outline-secondary" @onclick="ClearFilters">
+                                <i class="fas fa-eraser me-2"></i>Clear Filters
+                            </button>
+                            <span class="ms-3 text-muted">
+                                <i class="fas fa-list-ul me-1"></i>
+                                Showing <strong>@filteredPayments.Count</strong> of <strong>@(paymentCuongClaLists?.Count ?? 0)</strong> payments
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-else
-{
-    <a href="/PaymentCuongClas/PaymentCuongClaForm" class="btn btn-success"> Create</a>
-    <table>
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>PaymentDate</th>
-                <th>Amount</th>
-                <th>PaymentMethod</th>
-                <th>PaymentStatus</th>
-                <th>Notes</th>
-                <th>IsDeposit</th>
-                <th>DepositReturnAmount</th>
-                <th>Booking</th>
-                <th>ProcessedByNavigation</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
+    <!-- Payment List Section -->
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted fs-5">Loading payment data...</p>
+        </div>
+    }
+    else if (paymentCuongClaLists == null || !paymentCuongClaLists.Any())
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No Payments Found</h4>
+                <p class="text-muted">There are no payment records available. Create a new payment to get started.</p>
+                <button class="btn btn-primary mt-3" @onclick="CreateNewPayment">
+                    <i class="fas fa-plus-circle me-2"></i>Create First Payment
+                </button>
+            </div>
+        </div>
+    }
+    else if (!filteredPayments.Any())
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-search fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No Results Found</h4>
+                <p class="text-muted">No payments match your search criteria. Try adjusting your filters.</p>
+                <button class="btn btn-outline-secondary mt-3" @onclick="ClearFilters">
+                    <i class="fas fa-eraser me-2"></i>Clear All Filters
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="px-4 py-3">
+                                            <i class="fas fa-hashtag me-1"></i>Payment ID
+                                        </th>
+                                        <th class="py-3">
+                                            <i class="fas fa-calendar me-1"></i>Date
+                                        </th>
+                                        <th class="py-3">
+                                            <i class="fas fa-user me-1"></i>Customer
+                                        </th>
+                                        <th class="py-3">
+                                            <i class="fas fa-dollar-sign me-1"></i>Amount
+                                        </th>
+                                        <th class="py-3">
+                                            <i class="fas fa-credit-card me-1"></i>Method
+                                        </th>
+                                        <th class="py-3">
+                                            <i class="fas fa-info-circle me-1"></i>Status
+                                        </th>
+                                        <th class="py-3">
+                                            <i class="fas fa-check-circle me-1"></i>Deposit
+                                        </th>
+                                        <th class="py-3">
+                                            <i class="fas fa-user-tie me-1"></i>Processed By
+                                        </th>
+                                        <th class="text-center py-3 px-4">
+                                            <i class="fas fa-cog me-1"></i>Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in paginatedPayments)
+                                    {
+                                        <tr class="payment-row">
+                                            <td class="px-4 fw-semibold text-primary">
+                                                #@item.PaymentCuongClaid
+                                            </td>
+                                            <td>
+                                                <div class="d-flex flex-column">
+                                                    <span class="fw-semibold">@item.PaymentDate.ToString("MMM dd, yyyy")</span>
+                                                    <small class="text-muted">@item.PaymentDate.ToString("hh:mm tt")</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex flex-column">
+                                                    <span class="fw-semibold">@item.Booking?.Customer?.FullName</span>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-bookmark me-1"></i>Booking #@item.Booking?.BookingCuongClaid
+                                                    </small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-success-subtle text-success fs-6 fw-semibold px-3 py-2">
+                                                    $@item.Amount.ToString("N2")
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info text-white px-3 py-2">
+                                                    <i class="fas fa-wallet me-1"></i>@item.PaymentMethod
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if (item.PaymentStatus == "Completed")
+                                                {
+                                                    <span class="badge bg-success text-white px-3 py-2">
+                                                        <i class="fas fa-check-circle me-1"></i>Completed
+                                                    </span>
+                                                }
+                                                else if (item.PaymentStatus == "Pending")
+                                                {
+                                                    <span class="badge bg-warning text-dark px-3 py-2">
+                                                        <i class="fas fa-clock me-1"></i>Pending
+                                                    </span>
+                                                }
+                                                else if (item.PaymentStatus == "Failed")
+                                                {
+                                                    <span class="badge bg-danger text-white px-3 py-2">
+                                                        <i class="fas fa-times-circle me-1"></i>Failed
+                                                    </span>
+                                                }
+                                                else if (item.PaymentStatus == "Cancelled")
+                                                {
+                                                    <span class="badge bg-secondary text-white px-3 py-2">
+                                                        <i class="fas fa-ban me-1"></i>Cancelled
+                                                    </span>
+                                                }
+                                                else if (item.PaymentStatus == "Refunded")
+                                                {
+                                                    <span class="badge bg-info text-white px-3 py-2">
+                                                        <i class="fas fa-undo me-1"></i>Refunded
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-light text-dark px-3 py-2">
+                                                        <i class="fas fa-question-circle me-1"></i>Unknown
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (item.IsDeposit)
+                                                {
+                                                    <span class="badge bg-primary px-3 py-2">
+                                                        <i class="fas fa-check me-1"></i>Yes
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-light text-dark px-3 py-2">
+                                                        <i class="fas fa-times me-1"></i>No
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="d-flex flex-column">
+                                                    <span class="fw-semibold">@item.ProcessedByNavigation?.FullName</span>
+                                                    <small class="text-muted">@item.ProcessedByNavigation?.Email</small>
+                                                </div>
+                                            </td>
+                                            <td class="px-4">
+                                                <div class="btn-group" role="group">
+                                                    <button class="btn btn-sm btn-outline-info" @onclick="() => ViewDetails(item.PaymentCuongClaid)" 
+                                                            title="View Details">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-primary" @onclick="() => EditPayment(item.PaymentCuongClaid)" 
+                                                            title="Edit Payment">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <tbody>
-            @foreach(var item in paymentCuongClaLists)
-            {
-                <tr>
-                    <td>@item.PaymentCuongClaid</td>
-                    <td>@item.PaymentDate</td>
-                    <td>@item.Amount</td>
-                    <td>@item.PaymentMethod</td>
-                    <td>@item.PaymentStatus</td>
-                    <td>@item.Notes</td>
-                    <td>@item.IsDeposit</td>
-                    <td>@item.DepositReturnAmount</td>
-                    <td>@item.Booking.Customer.FullName / @item.Booking.BookingCuongClaid</td>
-                    <td>@item.ProcessedByNavigation.Email</td>
-                    <td>
-                        <button class="btn btn-primary btn-sm" @onclick="() => EditPayment(item.PaymentCuongClaid)">
-                            Edit
-                        </button>
-                        <button class="btn btn-primary btn-sm" @onclick="() => ViewPayment(item.PaymentCuongClaid)">
-                            View Detail
-                        </button>
-                    </td>
-                </tr>
-            }        
-        </tbody>
-    </table>
-}
+        <!-- Pagination Section -->
+        @if (totalPages > 1)
+        {
+            <div class="row">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="text-muted">
+                                    Showing @((currentPage - 1) * pageSize + 1) to @Math.Min(currentPage * pageSize, filteredPayments.Count) of @filteredPayments.Count entries
+                                </div>
+                                <nav aria-label="Payment pagination">
+                                    <ul class="pagination mb-0">
+                                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                            <button class="page-link" @onclick="() => ChangePage(1)" disabled="@(currentPage == 1)">
+                                                <i class="fas fa-angle-double-left"></i>
+                                            </button>
+                                        </li>
+                                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                            <button class="page-link" @onclick="() => ChangePage(currentPage - 1)" disabled="@(currentPage == 1)">
+                                                <i class="fas fa-angle-left"></i>
+                                            </button>
+                                        </li>
+                                        
+                                        @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                                        {
+                                            var pageNumber = i;
+                                            <li class="page-item @(currentPage == pageNumber ? "active" : "")">
+                                                <button class="page-link" @onclick="() => ChangePage(pageNumber)">
+                                                    @pageNumber
+                                                </button>
+                                            </li>
+                                        }
+                                        
+                                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                            <button class="page-link" @onclick="() => ChangePage(currentPage + 1)" disabled="@(currentPage == totalPages)">
+                                                <i class="fas fa-angle-right"></i>
+                                            </button>
+                                        </li>
+                                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                            <button class="page-link" @onclick="() => ChangePage(totalPages)" disabled="@(currentPage == totalPages)">
+                                                <i class="fas fa-angle-double-right"></i>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </nav>
+                                <div>
+                                    <select class="form-select form-select-sm" @bind="pageSize" @bind:after="OnPageSizeChanged">
+                                        <option value="5">5 per page</option>
+                                        <option value="10">10 per page</option>
+                                        <option value="25">25 per page</option>
+                                        <option value="50">50 per page</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<style>
+    .payment-row {
+        transition: all 0.3s ease;
+    }
+
+    .payment-row:hover {
+        background-color: #f8f9fa;
+        transform: scale(1.01);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .table thead th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .btn-group .btn {
+        border-radius: 0.25rem;
+    }
+
+    .badge {
+        font-weight: 500;
+        letter-spacing: 0.3px;
+    }
+
+    .card {
+        border-radius: 0.5rem;
+    }
+
+    .pagination .page-link {
+        border-radius: 0.25rem;
+        margin: 0 2px;
+        transition: all 0.3s ease;
+    }
+
+    .pagination .page-link:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .bg-success-subtle {
+        background-color: #d1e7dd !important;
+    }
+</style>
+
 @code {
-    private List<PaymentCuongCla> paymentCuongClaLists ;
+    private List<PaymentCuongCla> paymentCuongClaLists;
+    private List<PaymentCuongCla> filteredPayments = new();
+    private List<PaymentCuongCla> paginatedPayments = new();
+    private bool isLoading = true;
+    private SystemUserAccount? currentUser;
+
+    // Search filters with property setter
+    private string _searchCustomerName = string.Empty;
+    private string searchCustomerName
+    {
+        get => _searchCustomerName;
+        set
+        {
+            _searchCustomerName = value;
+            ApplyFilters();
+        }
+    }
+
+    private string searchPaymentMethod = string.Empty;
+    private string searchPaymentStatus = string.Empty;
+
+    // Pagination
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalPages => (int)Math.Ceiling((double)filteredPayments.Count / pageSize);
 
     protected override async Task OnInitializedAsync()
     {
+        // Check authentication
+        var isAuthenticated = await AuthService.IsAuthenticated();
+        if (!isAuthenticated)
+        {
+            Navigation.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        currentUser = await AuthService.GetCurrentUser();
+        await LoadPayments();
+    }
+
+    private async Task LoadPayments()
+    {
+        isLoading = true;
         try
         {
             paymentCuongClaLists = await _serviceProviders._IpaymentCuongClaService.GetAllAsync();
-            
-        } catch (Exception ex)
+            ApplyFilters();
+        }
+        catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            Console.WriteLine($"Error loading payments: {ex.Message}");
+            paymentCuongClaLists = new List<PaymentCuongCla>();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        if (paymentCuongClaLists == null)
+        {
+            filteredPayments = new List<PaymentCuongCla>();
+            return;
         }
 
+        filteredPayments = paymentCuongClaLists.Where(p =>
+            (string.IsNullOrWhiteSpace(_searchCustomerName) || 
+             (p.Booking?.Customer?.FullName?.Contains(_searchCustomerName, StringComparison.OrdinalIgnoreCase) ?? false)) &&
+            (string.IsNullOrWhiteSpace(searchPaymentMethod) || 
+             p.PaymentMethod.Equals(searchPaymentMethod, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrWhiteSpace(searchPaymentStatus) || 
+             p.PaymentStatus.Equals(searchPaymentStatus, StringComparison.OrdinalIgnoreCase))
+        ).ToList();
+
+        currentPage = 1; // Reset to first page when filters change
+        UpdatePaginatedPayments();
+    }
+
+    private void ClearFilters()
+    {
+        _searchCustomerName = string.Empty;
+        searchPaymentMethod = string.Empty;
+        searchPaymentStatus = string.Empty;
+        ApplyFilters();
+    }
+
+    private void UpdatePaginatedPayments()
+    {
+        paginatedPayments = filteredPayments
+            .Skip((currentPage - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+    }
+
+    private void ChangePage(int page)
+    {
+        if (page >= 1 && page <= totalPages)
+        {
+            currentPage = page;
+            UpdatePaginatedPayments();
+        }
+    }
+
+    private void OnPageSizeChanged()
+    {
+        currentPage = 1;
+        UpdatePaginatedPayments();
+    }
+
+    private void CreateNewPayment()
+    {
+        Navigation.NavigateTo("/PaymentCuongClas/PaymentCuongClaForm");
+    }
+
+    private void ViewDetails(int paymentId)
+    {
+        Navigation.NavigateTo($"/PaymentCuongClas/PaymentCuongClaDetail/{paymentId}");
     }
 
     private void EditPayment(int paymentId)
@@ -78,8 +546,9 @@ else
         Navigation.NavigateTo($"/PaymentCuongClas/PaymentCuongClaForm/{paymentId}");
     }
 
-    private void ViewPayment(int paymentId)
+    private async Task Logout()
     {
-        Navigation.NavigateTo($"/PaymentCuongClas/PaymentCuongClaDetail/{paymentId}");
+        await AuthService.Logout();
+        Navigation.NavigateTo("/login", forceLoad: true);
     }
 }
